@@ -1,0 +1,16 @@
+# Entorno virtual
+.venv/
+
+# Pesos del modelo (se descargan solos al ejecutar)
+modelos/
+*.pt
+
+# Fotos guardadas por el detector
+capturas/
+
+# Python
+__pycache__/
+*.pyc
+
+# macOS
+.DS_Store
