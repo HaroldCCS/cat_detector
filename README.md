@@ -1,6 +1,19 @@
 # Detector de gatos
 
-Se conecta a una cámara RTSP (por ejemplo, el celular Samsung) y detecta gatos con YOLO (`yolo26n`, el modelo más pequeño).
+Se conecta a una cámara RTSP (por ejemplo, el celular Samsung) y detecta gatos con YOLO (`yolo26l` a 960 px).
+
+### ¿Por qué `yolo26l`?
+
+Medido sobre 57 fotos reales de gatos de esta cámara, en un Mac con Apple Silicon (MPS):
+
+| Modelo | `imgsz` | Fotos con gato detectado (conf ≥ 0.40) | ms por frame |
+|---|---|---|---|
+| `yolo26n` | 640 | 38/57 | 21 |
+| `yolo26s` | 960 | 48/57 | 41 |
+| `yolo26m` | 960 | 52/57 | 72 |
+| `yolo26l` | 960 | 55/57 | 89 |
+
+El nano se pierde un tercio de los gatos, sobre todo los lejanos, los negros y los que están en posturas raras. El `l` a 960 px encuentra casi todos y sigue corriendo a ~11 FPS, que es de sobra para vigilar. Si tu equipo es más lento, `yolo26m` es un buen punto medio.
 
 ## Instalación (una sola vez)
 
@@ -79,9 +92,9 @@ Los suscriptores se guardan en `suscriptores.json` (no se sube al repo). Si algu
 | `snapshot_interval_seconds` | Mínimo de segundos entre fotos | `2` |
 | `snapshot_with_boxes` | Guardar la foto con los recuadros dibujados | `true` |
 | `confidence` | Confianza mínima para contar como gato | `0.4` |
-| `model` | Modelo YOLO (`yolo26n.pt`, `yolo11n.pt`, `yolo26s.pt`...) | `yolo26n.pt` |
+| `model` | Modelo YOLO (`yolo26n.pt`, `yolo26s.pt`, `yolo26m.pt`, `yolo26l.pt`, `yolo26x.pt`) | `yolo26l.pt` |
 | `device` | `auto`, `mps`, `cpu` o `cuda` | `auto` |
-| `imgsz` | Tamaño de entrada del modelo | `640` |
+| `imgsz` | Tamaño de entrada del modelo; más grande ayuda con gatos lejanos | `960` |
 | `rtsp_transport` | `tcp` o `udp` | `tcp` |
 | `snapshots_dir` | Carpeta de fotos | `capturas` |
 | `siren_enabled` | Activar la sirena | `true` |
