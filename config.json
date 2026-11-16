@@ -18,5 +18,10 @@
   "snapshot_interval_seconds": 2,
   "snapshot_with_boxes": true,
   "snapshots_dir": "capturas",
-  "rtsp_transport": "tcp"
+  "rtsp_transport": "tcp",
+  "siren_enabled": true,
+  "siren_sound": "",
+  "siren_cooldown_seconds": 15,
+  "telegram_enabled": true,
+  "telegram_interval_seconds": 30
 }

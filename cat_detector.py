@@ -23,6 +23,8 @@ from pathlib import Path
 import cv2
 import numpy as np
 
+from alerts import Alerts
+
 BASE_DIR = Path(__file__).resolve().parent
 CONFIG_PATH = BASE_DIR / "config.json"
 MODELS_DIR = BASE_DIR / "modelos"
@@ -42,6 +44,11 @@ DEFAULT_CONFIG = {
     "snapshot_with_boxes": True,
     "snapshots_dir": "capturas",
     "rtsp_transport": "tcp",
+    "siren_enabled": True,
+    "siren_sound": "",
+    "siren_cooldown_seconds": 15,
+    "telegram_enabled": True,
+    "telegram_interval_seconds": 30,
 }
 
 # Segundos sin detección antes de anunciar en la terminal que el gato se fue.
@@ -88,6 +95,18 @@ def load_config():
     with open(CONFIG_PATH, encoding="utf-8") as f:
         cfg = json.load(f)
     return {**DEFAULT_CONFIG, **cfg}
+
+
+def load_env(path=BASE_DIR / ".env"):
+    """Carga variables KEY=VALUE de .env sin pisar las que ya existan."""
+    if not path.exists():
+        return
+    for line in path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        os.environ.setdefault(key.strip(), value.strip().strip("\"'"))
 
 
 def save_config(cfg):
@@ -317,6 +336,8 @@ def run(cfg, camera, mode):
     model.predict(np.zeros((cfg["imgsz"], cfg["imgsz"], 3), np.uint8), device=device, verbose=False)
     log("Modelo listo.")
 
+    alerts = Alerts(cfg, camera, BASE_DIR, log)
+
     window_open = False
     if mode == "visual":
         open_window()
@@ -376,13 +397,16 @@ def run(cfg, camera, mode):
                     cat_present = True
                     log(f"Gato detectado (x{n_cats}, confianza {best:.0%})")
 
+                annotated = result.plot()
                 if now - last_snapshot >= snap_interval:
-                    annotated = result.plot()
                     img = annotated if cfg["snapshot_with_boxes"] else frame
                     path = save_snapshot(img, snapshots_dir)
                     last_snapshot = now
                     snapshots += 1
                     log(f"Foto guardada: {path.relative_to(BASE_DIR)}")
+
+                # Antes de dibujar el overlay de la ventana sobre `annotated`.
+                alerts.on_cat(annotated, n_cats, best)
 
                 if not window_open:
                     open_window()
@@ -430,6 +454,7 @@ def run(cfg, camera, mode):
     finally:
         print()
         log(f"Saliendo. Fotos guardadas en esta sesión: {snapshots}")
+        alerts.stop()
         stream.stop()
         cv2.destroyAllWindows()
         for _ in range(5):
@@ -442,6 +467,7 @@ def main():
     parser.add_argument("--modo", choices=["visual", "vigilancia"], help="modo de ejecución (salta el menú)")
     args = parser.parse_args()
 
+    load_env()
     cfg = load_config()
     print("=== Detector de gatos ===")
 

@@ -14,3 +14,8 @@ __pycache__/
 
 # macOS
 .DS_Store
+
+# Secretos y datos locales de alertas
+.env
+suscriptores.json
+sonidos/sirena.wav
