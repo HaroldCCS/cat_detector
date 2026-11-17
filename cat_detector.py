@@ -48,7 +48,18 @@ DEFAULT_CONFIG = {
     "siren_sound": "",
     "siren_cooldown_seconds": 15,
     "telegram_enabled": True,
-    "telegram_interval_seconds": 30,
+    "telegram_interval_seconds": 2,
+    "video_enabled": True,
+    "video_segment_seconds": 10,
+    "video_preroll_seconds": 2,
+    "video_max_side": 1280,
+    "video_with_boxes": True,
+    "video_with_clock": True,
+    "compilation_max_seconds": 180,
+    "long_visit_ask_after_seconds": 60,
+    "long_visit_reask_minutes": 10,
+    "reduced_photo_interval_seconds": 30,
+    "reduced_video_interval_seconds": 60,
 }
 
 # Segundos sin detección antes de anunciar en la terminal que el gato se fue.
@@ -199,6 +210,7 @@ class CameraStream:
         self.url = url
         self.transport = transport
         self.connected = False
+        self.on_frame = None  # se llama con cada frame (lo usa el grabador de video)
         self._lock = threading.Lock()
         self._frame = None
         self._frame_id = 0
@@ -253,6 +265,9 @@ class CameraStream:
                 with self._lock:
                     self._frame = frame
                     self._frame_id += 1
+                callback = self.on_frame
+                if callback is not None:
+                    callback(frame)
 
             cap.release()
             self.connected = False
@@ -337,6 +352,7 @@ def run(cfg, camera, mode):
     log("Modelo listo.")
 
     alerts = Alerts(cfg, camera, BASE_DIR, log)
+    stream.on_frame = alerts.push_frame
 
     window_open = False
     if mode == "visual":
@@ -389,6 +405,7 @@ def run(cfg, camera, mode):
             now = time.monotonic()
             n_cats = len(result.boxes)
             annotated = None
+            alerts.update_frame(result, n_cats)  # para /foto en Telegram
 
             if n_cats:
                 best = float(result.boxes.conf.max())

@@ -23,5 +23,16 @@
   "siren_sound": "",
   "siren_cooldown_seconds": 15,
   "telegram_enabled": true,
-  "telegram_interval_seconds": 30
+  "telegram_interval_seconds": 2,
+  "video_enabled": true,
+  "video_segment_seconds": 10,
+  "video_preroll_seconds": 2,
+  "video_max_side": 1280,
+  "video_with_boxes": true,
+  "video_with_clock": true,
+  "compilation_max_seconds": 180,
+  "long_visit_ask_after_seconds": 60,
+  "long_visit_reask_minutes": 10,
+  "reduced_photo_interval_seconds": 30,
+  "reduced_video_interval_seconds": 60
 }
